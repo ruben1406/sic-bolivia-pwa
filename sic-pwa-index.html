@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#0F6E56">
+    <meta name="description" content="SIC Bolivia - Inspection Reports Management">
+    
+    <title>SIC Bolivia - Reports</title>
+    
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230F6E56' width='192' height='192'/><text x='96' y='110' font-size='80' font-weight='bold' fill='white' text-anchor='middle'>SIC</text></svg>">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%230F6E56' width='192' height='192'/><text x='96' y='110' font-size='80' font-weight='bold' fill='white' text-anchor='middle'>SIC</text></svg>">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #0F6E56;
+            --secondary: #2D6A4F;
+            --dark: #1B4332;
+            --light: #E8F5F0;
+            --white: #FFFFFF;
+            --text: #333333;
+            --border: #D0D0D0;
+            --success: #639922;
+            --warning: #E1A000;
+            --danger: #C1121F;
+        }
+        
+        html, body {
+            height: 100%;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: #f5f5f5;
+            color: var(--text);
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* HEADER */
+        .header {
+            background: var(--primary);
+            color: var(--white);
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .user-menu {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .user-menu:hover {
+            background: rgba(255,255,255,0.3);
+        }
+        
+        /* MAIN CONTENT */
+        main {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 70px;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 16px;
+        }
+        
+        /* NAVIGATION TABS */
+        .nav-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid var(--border);
+            overflow-x: auto;
+        }
+        
+        .nav-tab {
+            padding: 12px 16px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text);
+            border-bottom: 3px solid transparent;
+            white-space: nowrap;
+            transition: all 0.3s;
+        }
+        
+        .nav-tab:hover {
+            color: var(--primary);
+        }
+        
+        .nav-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+        
+        /* SECTIONS */
+        .section {
+            display: none;
+        }
+        
+        .section.active {
+            display: block;
+        }
+        
+        /* WELCOME BANNER */
+        .welcome-banner {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        
+        .welcome-banner h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .welcome-banner p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        /* METRIC CARDS */
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .metric-card {
+            background: var(--white);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-left: 4px solid var(--primary);
+        }
+        
+        .metric-card.pending {
+            border-left-color: var(--warning);
+        }
+        
+        .metric-card.completed {
+            border-left-color: var(--success);
+        }
+        
+        .metric-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--primary);
+            margin: 8px 0;
+        }
+        
+        .metric-label {
+            font-size: 12px;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        /* SECTION TITLE */
+        .section-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--dark);
+        }
+        
+        /* ORDER CARD */
+        .order-list {
+            display: grid;
+            gap: 12px;
+        }
+        
+        .order-card {
+            background: var(--white);
+            padding: 16px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            cursor: pointer;
+            transition: all 0.3s;
+            border-left: 4px solid var(--primary);
+        }
+        
+        .order-card:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .order-card.pending {
+            border-left-color: var(--warning);
+        }
+        
+        .order-card.completed {
+            border-left-color: var(--success);
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 8px;
+        }
+        
+        .order-id {
+            font-weight: 600;
+            color: var(--dark);
+            font-size: 16px;
+        }
+        
+        .order-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+        }
+        
+        .order-status.pending {
+            background: #fff3cd;
+            color: #856404;
+        }
+        
+        .order-status.completed {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .order-status.in-process {
+            background: #cce5ff;
+            color: #004085;
+        }
+        
+        .order-detail {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.6;
+        }
+        
+        .order-detail strong {
+            color: var(--text);
+        }
+        
+        /* DETAIL VIEW */
+        .detail-container {
+            background: var(--white);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+        
+        .detail-header {
+            background: var(--primary);
+            color: var(--white);
+            padding: 24px;
+        }
+        
+        .detail-header h2 {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .detail-header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+        
+        .detail-body {
+            padding: 24px;
+        }
+        
+        .detail-section {
+            margin-bottom: 24px;
+        }
+        
+        .detail-section h3 {
+            font-size: 16px;
+            color: var(--dark);
+            margin-bottom: 12px;
+            border-bottom: 2px solid var(--light);
+            padding-bottom: 8px;
+        }
+        
+        .detail-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .detail-item {
+            font-size: 14px;
+        }
+        
+        .detail-label {
+            color: #666;
+            font-size: 12px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+        }
+        
+        .detail-value {
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        /* PHOTO GALLERY */
+        .photo-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 12px;
+            margin-top: 12px;
+        }
+        
+        .photo-item {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            aspect-ratio: 1;
+            background: var(--light);
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        /* BUTTONS */
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: var(--white);
+        }
+        
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+        }
+        
+        .btn-secondary {
+            background: var(--light);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: var(--white);
+        }
+        
+        .btn-small {
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+            flex-wrap: wrap;
+        }
+        
+        /* BOTTOM NAV */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--white);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            z-index: 50;
+        }
+        
+        .nav-item {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-size: 12px;
+            color: #666;
+            transition: all 0.3s;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+            border-top: 3px solid var(--primary);
+        }
+        
+        .nav-icon {
+            font-size: 20px;
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        /* LOADING & ERROR */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--light);
+            border-top-color: var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+        }
+        
+        /* LOGIN */
+        .login-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: var(--white);
+        }
+        
+        .login-box {
+            text-align: center;
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .login-box h1 {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        
+        .login-box p {
+            font-size: 16px;
+            margin-bottom: 32px;
+            opacity: 0.9;
+        }
+        
+        .login-box .btn {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        /* RESPONSIVE */
+        @media (max-width: 600px) {
+            .detail-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            .welcome-banner h2 {
+                font-size: 20px;
+            }
+            
+            .nav-tabs {
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- LOGIN SCREEN -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <h1>🌾 SIC Bolivia</h1>
+            <p>Inspection & Certification System</p>
+            <button class="btn btn-primary" onclick="loginWithGoogle()">
+                🔐 Sign in with Google
+            </button>
+        </div>
+    </div>
+    
+    <!-- MAIN APP -->
+    <div id="appContainer" style="display: none; display: flex; flex-direction: column; height: 100vh;">
+        <!-- HEADER -->
+        <header class="header">
+            <h1>🌾 SIC Bolivia</h1>
+            <div class="header-actions">
+                <span id="userDisplay"></span>
+                <button class="user-menu" onclick="logout()">Logout</button>
+            </div>
+        </header>
+        
+        <!-- MAIN CONTENT -->
+        <main>
+            <div class="container">
+                <!-- DASHBOARD SECTION -->
+                <section id="dashboardSection" class="section active">
+                    <div class="welcome-banner">
+                        <h2>Welcome back! 👋</h2>
+                        <p id="welcomeMessage"></p>
+                    </div>
+                    
+                    <div class="metrics" id="metricsContainer">
+                        <div class="metric-card">
+                            <div class="metric-label">Active Orders</div>
+                            <div class="metric-value" id="activeOrdersCount">0</div>
+                        </div>
+                        <div class="metric-card completed">
+                            <div class="metric-label">Completed</div>
+                            <div class="metric-value" id="completedOrdersCount">0</div>
+                        </div>
+                        <div class="metric-card pending">
+                            <div class="metric-label">Pending</div>
+                            <div class="metric-value" id="pendingOrdersCount">0</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">Total Clients</div>
+                            <div class="metric-value" id="clientsCount">0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="section-title">Recent Orders</div>
+                    <div class="order-list" id="recentOrdersList"></div>
+                </section>
+                
+                <!-- ORDERS SECTION -->
+                <section id="ordersSection" class="section">
+                    <div style="margin-bottom: 16px;">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Search by Order N°, Client, or Product..." 
+                            style="width: 100%; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"
+                        >
+                    </div>
+                    <div class="order-list" id="allOrdersList"></div>
+                </section>
+                
+                <!-- DETAIL SECTION -->
+                <section id="detailSection" class="section">
+                    <button class="btn btn-secondary btn-small" onclick="goToOrders()" style="margin-bottom: 16px;">← Back to Orders</button>
+                    <div id="detailContent"></div>
+                </section>
+            </div>
+        </main>
+        
+        <!-- BOTTOM NAVIGATION -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" onclick="switchSection('dashboard')">
+                <span class="nav-icon">📊</span>
+                Dashboard
+            </button>
+            <button class="nav-item" onclick="switchSection('orders')">
+                <span class="nav-icon">📋</span>
+                Orders
+            </button>
+            <button class="nav-item" onclick="switchSection('settings')">
+                <span class="nav-icon">⚙️</span>
+                Settings
+            </button>
+        </nav>
+    </div>
+    
+    <!-- SCRIPTS -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="api.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js').catch(err => {
+                console.log('Service Worker registration failed:', err);
+            });
+        }
+    </script>
+</body>
+</html>
