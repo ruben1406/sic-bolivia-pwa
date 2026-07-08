@@ -398,7 +398,7 @@ async function generateReport(format) {
     }
     
     try {
-        const scriptUrl = 'YOUR_GOOGLE_APPS_SCRIPT_URL'; // Replace with actual URL
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbxy6lxVYxqo1kzF26gm7YN2OOzADeItBgFMDkqVkK4T1HuD1LT7P6_xFUs5XUxYqg1u/exec'; // Replace with actual URL
         const url = `${scriptUrl}?id=${selectedOrder['ID_Orden']}&format=${format}`;
         window.open(url, '_blank');
     } catch (error) {
