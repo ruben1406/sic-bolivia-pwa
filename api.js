@@ -8,8 +8,8 @@
 // CONFIGURATION - ACTUALIZA ESTOS VALORES
 // ============================================================================
 
-const SHEET_ID = 'PEGAR_TU_GOOGLE_SHEET_ID_AQUI'; // Replace with your Google Sheet ID
-const API_KEY = 'PEGAR_TU_GOOGLE_API_KEY_AQUI'; // Get from Google Cloud Console
+const SHEET_ID = '1KjXqTV1x3M5fTedgS9_I4rfL1qNlbwaeCAmgROouBbg'; // Replace with your Google Sheet ID
+const API_KEY = 'AIzaSyCMYC3iKrmRhG_ql82tjJQeNoszlgIHukY'; // Get from Google Cloud Console
 
 // ============================================================================
 // FETCH DATA FROM GOOGLE SHEETS
