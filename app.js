@@ -398,7 +398,7 @@ async function generateReport(format) {
     }
     
     try {
-        const scriptUrl = 'https://script.google.com/macros/s/AKfycbxRgfovtICkU8JAApE1hQ3F-mQQowMCZYGt3xA2owpapkA_uMDQS2wrUJdEci_xHWR7/exec';  // Replace with actual URL
+        const scriptUrl = 'https://script.google.com/macros/s/AKfycbzsV2mdbsw95skv370dm94F5Ns_yqRUs1q8SDB2eQsOGUo_Zs94OJigNg_22vVLww/exec';  // Replace with actual URL
         const url = `${scriptUrl}?id=${selectedOrder['ID_Orden']}&format=${format}`;
         window.open(url, '_blank');
     } catch (error) {
