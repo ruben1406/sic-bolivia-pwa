@@ -11,8 +11,7 @@ const ASSETS_TO_CACHE = [
     '/index.html',
     '/app.js',
     '/api.js',
-    '/manifest.json',
-    'https://accounts.google.com/gsi/client'
+    '/manifest.json'
 ];
 
 // ============================================================================
@@ -39,24 +38,27 @@ self.addEventListener('install', event => {
 // ACTIVATE EVENT
 // ============================================================================
 
-self.addEventListener('activate', event => {
-    console.log('Service Worker activating...');
+self.addEventListener('install', event => {
+    console.log('Service Worker installing...');
     
     event.waitUntil(
-        caches.keys().then(cacheNames => {
+        caches.open(CACHE_NAME).then(cache => {
+            console.log('Caching app shell');
+            // Intentar cachear, pero no fallar si alguno no está disponible
             return Promise.all(
-                cacheNames.map(cacheName => {
-                    if (cacheName !== CACHE_NAME && cacheName !== RUNTIME_CACHE) {
-                        console.log('Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
+                ASSETS_TO_CACHE.map(url => {
+                    return cache.add(url).catch(err => {
+                        console.warn('Failed to cache:', url, err);
+                        // No lanzar error, continuar
+                    });
                 })
             );
+        }).catch(error => {
+            console.error('Cache installation error:', error);
         })
     );
     
-    // Claim all clients
-    self.clients.claim();
+    self.skipWaiting();
 });
 
 // ============================================================================
