@@ -596,18 +596,19 @@
                 
                 <!-- ORDERS SECTION -->
                 <section id="ordersSection" class="section">
-                <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
-                    <input 
-                        type="text" 
-                        id="searchInput" 
-                        placeholder="Search by Order N°, Client, or Product..." 
-                        style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"
-                    >
-                    <button class="btn btn-primary" onclick="showCreateOrderForm()" style="white-space: nowrap;">
-                        ➕ New Order
-                    </button>
-                    <div class="order-list" id="allOrdersList"></div>
-                </div>
+                    <div style="margin-bottom: 16px; display: flex; gap: 12px; align-items: center;">
+                        <input 
+                            type="text" 
+                            id="searchInput" 
+                            placeholder="Search by Order N°, Client, or Product..." 
+                            style="flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 14px;"
+                        >
+                        <button class="btn btn-primary" onclick="showCreateOrderForm()" style="white-space: nowrap;">
+                            ➕ New Order
+                        </button>
+                        <div class="order-list" id="allOrdersList"></div>
+                    </div>
+                 </section>
                 <!-- DETAIL SECTION -->
                 <section id="detailSection" class="section">
                     <button class="btn btn-secondary btn-small" onclick="goToOrders()" style="margin-bottom: 16px;">← Back to Orders</button>
