@@ -5,7 +5,7 @@
 let currentUser = null;
 let allOrders = [];
 let selectedOrder = null;
-const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsV2mdbsw95skv370dm94F5Ns_yqRUs1q8SDB2eQsOGUo_Zs94OJigNg_22vVLww/exec';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxtEhsA3hxwSc_DFqi3cykLLuGx3LM564IP5yEccuMhNy-rfUaEJxp0oFksfc_tI__z/exec';
 
 // ============================================================================
 // INITIALIZATION
