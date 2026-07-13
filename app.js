@@ -1,10 +1,11 @@
 // ============================================================================
-// SIC BOLIVIA PWA - MAIN APPLICATION LOGIC
+// SIC BOLIVIA PWA - COMPLETE CRUD APPLICATION
 // ============================================================================
 
 let currentUser = null;
 let allOrders = [];
 let selectedOrder = null;
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzsV2mdbsw95skv370dm94F5Ns_yqRUs1q8SDB2eQsOGUo_Zs94OJigNg_22vVLww/exec';
 
 // ============================================================================
 // INITIALIZATION
@@ -16,22 +17,12 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function setupEventListeners() {
-    // Search functionality
     const searchInput = document.getElementById('searchInput');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             filterOrders(e.target.value);
         });
     }
-    
-    // Navigation tabs
-    const navTabs = document.querySelectorAll('.nav-tab');
-    navTabs.forEach(tab => {
-        tab.addEventListener('click', () => {
-            const section = tab.dataset.section;
-            switchSection(section);
-        });
-    });
 }
 
 // ============================================================================
@@ -52,10 +43,6 @@ function checkAuthentication() {
 }
 
 function loginWithGoogle() {
-    // Note: For production, use Google OAuth 2.0
-    // For MVP, we'll use a simplified authentication
-    
-    // Simulated login - replace with real OAuth in production
     const userName = prompt('Enter your name (for testing):') || 'Inspector';
     const userEmail = prompt('Enter your email:') || 'inspector@sic-bol.com';
     
@@ -99,35 +86,24 @@ function showApp() {
 }
 
 function switchSection(sectionName) {
-    // Hide all sections
     document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
-    
-    // Hide all nav items active state
     document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
     
-    // Show selected section
     const section = document.getElementById(sectionName + 'Section');
     if (section) {
         section.classList.add('active');
     }
     
-    // Show selected nav item active state
     const navItem = event?.target?.closest('.nav-item');
     if (navItem) {
         navItem.classList.add('active');
     }
     
-    // Load data for section
     if (sectionName === 'dashboard') {
         loadDashboard();
     } else if (sectionName === 'orders') {
         loadAllOrders();
     }
-}
-
-function goToOrders() {
-    switchSection('orders');
-    document.querySelector('[onclick="switchSection(\'orders\')"]')?.click();
 }
 
 // ============================================================================
@@ -139,7 +115,6 @@ async function loadDashboard() {
         const orders = await getOrdersFromSheet();
         allOrders = orders;
         
-        // Calculate metrics
         const active = orders.filter(o => o['Estado_Orden'] !== 'Completado').length;
         const completed = orders.filter(o => o['Estado_Orden'] === 'Completado').length;
         const pending = orders.filter(o => o['Estado_Orden'] === 'Pendiente').length;
@@ -149,7 +124,6 @@ async function loadDashboard() {
         document.getElementById('pendingOrdersCount').textContent = pending;
         document.getElementById('clientsCount').textContent = new Set(orders.map(o => o['ID_Cliente'])).size;
         
-        // Display recent orders (last 5)
         const recent = orders.slice(0, 5);
         displayOrders(recent, 'recentOrdersList');
         
@@ -160,7 +134,7 @@ async function loadDashboard() {
 }
 
 // ============================================================================
-// ORDERS
+// ORDERS - READ
 // ============================================================================
 
 async function loadAllOrders() {
@@ -214,7 +188,7 @@ function displayOrders(orders, containerId) {
 }
 
 // ============================================================================
-// DETAIL VIEW
+// ORDER DETAIL - READ
 // ============================================================================
 
 async function viewOrderDetail(orderId) {
@@ -228,7 +202,6 @@ async function viewOrderDetail(orderId) {
         
         const detailContent = document.getElementById('detailContent');
         
-        // Get related data
         const lotes = await getRelatedData('Lotes', 'ID_Orden', orderId);
         const muestras = await getRelatedData('Muestras', 'ID_Orden', orderId);
         const resultados = await getRelatedData('Resultados_Lab', 'ID_Orden', orderId);
@@ -236,7 +209,6 @@ async function viewOrderDetail(orderId) {
         const fotos = await getRelatedData('Fotos', 'ID_Orden', orderId);
         const conclusiones = await getRelatedData('Conclusiones', 'ID_Orden', orderId);
         
-        // Build detail HTML
         let html = `
             <div class="detail-container">
                 <div class="detail-header">
@@ -245,7 +217,6 @@ async function viewOrderDetail(orderId) {
                 </div>
                 
                 <div class="detail-body">
-                    <!-- GENERAL DATA -->
                     <div class="detail-section">
                         <h3>General Information</h3>
                         <div class="detail-row">
@@ -278,9 +249,14 @@ async function viewOrderDetail(orderId) {
                                 <div class="detail-value">${selectedOrder['Cantidad_Declarada_kg'] || 'N/A'} kg</div>
                             </div>
                         </div>
+                        <div class="detail-row">
+                            <div class="detail-item">
+                                <div class="detail-label">Status</div>
+                                <div class="detail-value">${selectedOrder['Estado_Orden'] || 'N/A'}</div>
+                            </div>
+                        </div>
                     </div>
                     
-                    <!-- LOTS -->
                     ${lotes.length > 0 ? `
                         <div class="detail-section">
                             <h3>Lots (${lotes.length})</h3>
@@ -292,7 +268,6 @@ async function viewOrderDetail(orderId) {
                         </div>
                     ` : ''}
                     
-                    <!-- SAMPLES -->
                     ${muestras.length > 0 ? `
                         <div class="detail-section">
                             <h3>Samples (${muestras.length})</h3>
@@ -305,20 +280,18 @@ async function viewOrderDetail(orderId) {
                         </div>
                     ` : ''}
                     
-                    <!-- LAB RESULTS -->
                     ${resultados.length > 0 ? `
                         <div class="detail-section">
                             <h3>Lab Results (${resultados.length})</h3>
                             ${resultados.map(resultado => `
                                 <div class="detail-item" style="margin-bottom: 12px; padding: 12px; background: var(--light); border-radius: 8px;">
                                     <strong>${resultado['Parametro_Analisis'] || 'N/A'}</strong>
-                                    <br>Lab: ${resultado['Laboratorio'] || 'N/A'} | Result: ${resultado['Resultado'] || 'N/A'} | Report: ${resultado['Numero_Reporte_Lab'] || 'N/A'}
+                                    <br>Lab: ${resultado['Laboratorio'] || 'N/A'} | Result: ${resultado['Resultado'] || 'N/A'}
                                 </div>
                             `).join('')}
                         </div>
                     ` : ''}
                     
-                    <!-- PROCESS PARAMETERS -->
                     ${parametros.length > 0 ? `
                         <div class="detail-section">
                             <h3>Process Parameters (${parametros.length})</h3>
@@ -331,32 +304,25 @@ async function viewOrderDetail(orderId) {
                         </div>
                     ` : ''}
                     
-                    <!-- PHOTOS -->
                     ${fotos.length > 0 ? `
                         <div class="detail-section">
                             <h3>Photos (${fotos.length})</h3>
                             <div class="photo-gallery">
                                 ${fotos.map(foto => `
-                                    <div class="photo-item" onclick="viewPhoto('${foto['Imagen'] || ''}')">
-                                        ${foto['Imagen'] ? `<img src="${foto['Imagen']}" alt="${foto['Descripcion'] || ''}">` : '<div style="display: flex; align-items: center; justify-content: center; height: 100%; background: #ddd;">📷</div>'}
+                                    <div class="photo-item">
+                                        <div style="display: flex; align-items: center; justify-content: center; height: 100%; background: var(--light); color: var(--primary);">
+                                            📷 ${foto['Descripcion'] || 'Photo'}
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
                         </div>
                     ` : ''}
                     
-                    <!-- CONCLUSIONS -->
-                    ${conclusiones.length > 0 ? `
-                        <div class="detail-section">
-                            <h3>Conclusions</h3>
-                            <div class="detail-item" style="padding: 12px; background: var(--light); border-radius: 8px;">
-                                ${conclusiones[0]['Resumen_Conclusion'] || 'No conclusion data'}
-                            </div>
-                        </div>
-                    ` : ''}
-                    
-                    <!-- ACTIONS -->
                     <div class="actions">
+                        <button class="btn btn-primary" onclick="editOrderModal()">
+                            ✏️ Edit
+                        </button>
                         <button class="btn btn-primary" onclick="generateReport('pdf')">
                             📄 Generate PDF
                         </button>
@@ -366,6 +332,9 @@ async function viewOrderDetail(orderId) {
                         <button class="btn btn-secondary" onclick="goToOrders()">
                             ← Back
                         </button>
+                        <button class="btn" style="background: #C1121F; color: white;" onclick="deleteOrderConfirm()">
+                            🗑️ Delete
+                        </button>
                     </div>
                 </div>
             </div>
@@ -373,7 +342,6 @@ async function viewOrderDetail(orderId) {
         
         detailContent.innerHTML = html;
         document.getElementById('detailSection').classList.add('active');
-        document.querySelector('.nav-item[onclick*="settings"]').classList.remove('active');
         
     } catch (error) {
         console.error('Error loading detail:', error);
@@ -381,9 +349,243 @@ async function viewOrderDetail(orderId) {
     }
 }
 
-function viewPhoto(photoUrl) {
-    if (photoUrl) {
-        window.open(photoUrl, '_blank');
+function goToOrders() {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.getElementById('ordersSection').classList.add('active');
+}
+
+// ============================================================================
+// CREATE ORDER
+// ============================================================================
+
+function showCreateOrderForm() {
+    const form = `
+        <div class="detail-container">
+            <div class="detail-header">
+                <h2>Create New Order</h2>
+                <p>Fill in the order details</p>
+            </div>
+            
+            <div class="detail-body">
+                <form id="createOrderForm" onsubmit="submitCreateOrder(event)">
+                    <div class="detail-section">
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Order Number</label>
+                            <input type="text" id="numeroOrden" placeholder="e.g., 4360-001-2025" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                        </div>
+                        
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Report Type</label>
+                            <select id="tipoReporte" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                                <option value="">Select type...</option>
+                                <option value="Set Fotográfico">Set Fotográfico</option>
+                                <option value="Inspección y Validación">Inspección y Validación</option>
+                                <option value="Muestreo Simple">Muestreo Simple</option>
+                            </select>
+                        </div>
+                        
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Client</label>
+                            <input type="text" id="cliente" placeholder="e.g., JACHA INTI INDUSTRIAL S.A." required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                        </div>
+                        
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Product</label>
+                            <input type="text" id="producto" placeholder="e.g., ORGANIC WHITE QUINOA" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                        </div>
+                        
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Inspection Date</label>
+                            <input type="date" id="fechaInspeccion" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                        </div>
+                        
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Location</label>
+                            <input type="text" id="ubicacion" placeholder="e.g., Plant address" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                        </div>
+                        
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Quantity (kg)</label>
+                            <input type="number" id="cantidad" placeholder="e.g., 1000" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                        </div>
+                        
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Status</label>
+                            <select id="estado" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                                <option value="Pendiente">Pendiente</option>
+                                <option value="En Proceso">En Proceso</option>
+                                <option value="Completado">Completado</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button type="submit" class="btn btn-primary">✓ Create Order</button>
+                        <button type="button" class="btn btn-secondary" onclick="goToOrders()">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('detailContent').innerHTML = form;
+    document.getElementById('detailSection').classList.add('active');
+    
+    // Set today's date as default
+    document.getElementById('fechaInspeccion').valueAsDate = new Date();
+}
+
+async function submitCreateOrder(event) {
+    event.preventDefault();
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'create');
+        formData.append('numero_orden', document.getElementById('numeroOrden').value);
+        formData.append('tipo_reporte', document.getElementById('tipoReporte').value);
+        formData.append('id_cliente', document.getElementById('cliente').value);
+        formData.append('id_producto', document.getElementById('producto').value);
+        formData.append('fecha_inspeccion', document.getElementById('fechaInspeccion').value);
+        formData.append('lugar_inspeccion', document.getElementById('ubicacion').value);
+        formData.append('inspector', currentUser.name);
+        formData.append('cantidad_kg', document.getElementById('cantidad').value);
+        formData.append('estado', document.getElementById('estado').value);
+        
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Order created successfully!');
+            await loadDashboard();
+            goToOrders();
+        } else {
+            showError('Error creating order: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to create order');
+    }
+}
+
+// ============================================================================
+// UPDATE ORDER
+// ============================================================================
+
+function editOrderModal() {
+    if (!selectedOrder) return;
+    
+    const form = `
+        <div class="detail-container">
+            <div class="detail-header">
+                <h2>Edit Order</h2>
+                <p>${selectedOrder['Numero_Orden']}</p>
+            </div>
+            
+            <div class="detail-body">
+                <form id="editOrderForm" onsubmit="submitUpdateOrder(event)">
+                    <div class="detail-section">
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Order Number</label>
+                            <input type="text" id="editNumeroOrden" value="${selectedOrder['Numero_Orden'] || ''}" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                        </div>
+                        
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Status</label>
+                            <select id="editEstado" required style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px;">
+                                <option value="Pendiente" ${selectedOrder['Estado_Orden'] === 'Pendiente' ? 'selected' : ''}>Pendiente</option>
+                                <option value="En Proceso" ${selectedOrder['Estado_Orden'] === 'En Proceso' ? 'selected' : ''}>En Proceso</option>
+                                <option value="Completado" ${selectedOrder['Estado_Orden'] === 'Completado' ? 'selected' : ''}>Completado</option>
+                            </select>
+                        </div>
+                        
+                        <div class="detail-item" style="margin-bottom: 16px;">
+                            <label style="display: block; margin-bottom: 8px; font-weight: 500;">Observations</label>
+                            <textarea id="editObservaciones" style="width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; min-height: 100px;">${selectedOrder['Observaciones'] || ''}</textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="actions">
+                        <button type="submit" class="btn btn-primary">✓ Update Order</button>
+                        <button type="button" class="btn btn-secondary" onclick="viewOrderDetail('${selectedOrder['ID_Orden']}')">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    `;
+    
+    document.getElementById('detailContent').innerHTML = form;
+}
+
+async function submitUpdateOrder(event) {
+    event.preventDefault();
+    
+    try {
+        const formData = new FormData();
+        formData.append('action', 'update');
+        formData.append('id_orden', selectedOrder['ID_Orden']);
+        formData.append('numero_orden', document.getElementById('editNumeroOrden').value);
+        formData.append('estado', document.getElementById('editEstado').value);
+        formData.append('observaciones', document.getElementById('editObservaciones').value);
+        
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Order updated successfully!');
+            await loadDashboard();
+            viewOrderDetail(selectedOrder['ID_Orden']);
+        } else {
+            showError('Error updating order: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to update order');
+    }
+}
+
+// ============================================================================
+// DELETE ORDER
+// ============================================================================
+
+function deleteOrderConfirm() {
+    if (!selectedOrder) return;
+    
+    if (confirm(`Are you sure you want to delete order ${selectedOrder['Numero_Orden']}? This action cannot be undone.`)) {
+        deleteOrder();
+    }
+}
+
+async function deleteOrder() {
+    try {
+        const formData = new FormData();
+        formData.append('action', 'delete');
+        formData.append('id_orden', selectedOrder['ID_Orden']);
+        
+        const response = await fetch(APPS_SCRIPT_URL, {
+            method: 'POST',
+            body: formData
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            showSuccess('Order deleted successfully!');
+            await loadDashboard();
+            goToOrders();
+        } else {
+            showError('Error deleting order: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        showError('Failed to delete order');
     }
 }
 
@@ -398,8 +600,7 @@ async function generateReport(format) {
     }
     
     try {
-        const scriptUrl = 'https://script.google.com/macros/s/AKfycbzsV2mdbsw95skv370dm94F5Ns_yqRUs1q8SDB2eQsOGUo_Zs94OJigNg_22vVLww/exec';  // Replace with actual URL
-        const url = `${scriptUrl}?id=${selectedOrder['ID_Orden']}&format=${format}`;
+        const url = `${APPS_SCRIPT_URL.split('?')[0]}?id=${selectedOrder['ID_Orden']}&format=${format}`;
         window.open(url, '_blank');
     } catch (error) {
         console.error('Error generating report:', error);
